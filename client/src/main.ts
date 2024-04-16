@@ -26,6 +26,17 @@ const directions = new window.MapboxDirections({
 
 map.addControl(directions, 'top-left')
 
+directions.on('clear', () => {
+    if (map.getLayer("cameras"))
+        map.removeLayer("cameras")
+
+    if (map.getLayer("cameras-count"))
+        map.removeLayer("cameras-count")
+
+    if (map.getSource("cameras"))
+        map.removeSource("cameras")
+})
+
 directions.on('route', ({ route }: { route: MapboxDirections["routes"] }) => {
     const geometry = route[0].geometry as string
 
@@ -38,8 +49,6 @@ directions.on('route', ({ route }: { route: MapboxDirections["routes"] }) => {
     })
         .then(response => response.json())
         .then((data: Camera[]) => {
-
-            console.log(data)
 
             if (map.getLayer("cameras"))
                 map.removeLayer("cameras")
@@ -100,8 +109,6 @@ directions.on('route', ({ route }: { route: MapboxDirections["routes"] }) => {
                     return
 
                 const { Name, Url } = e.features[0].properties as Camera
-
-                // console.log(Name, Url)
 
                 new mapboxgl.Popup()
                     .setLngLat(e.lngLat)
