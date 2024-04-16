@@ -1,28 +1,28 @@
+import base64
 from ultralytics import YOLO
-# import cv2
+from ultralytics.models.yolo.model import Model
 from camera import Camera
+from PIL import Image
+from io import BytesIO
 import av
 
-yolo_8 = YOLO()
+yolo_8: Model = YOLO()
 
 def detect_from_video(camera: Camera):
     
     try:
         container = av.open(camera["VideoUrl"], timeout=1)
-        frame = next(container.decode(video=0)).to_image()
+        frame = next(container.decode(video=0)).to_image() # PIL Image
     except Exception as e:
         camera["count"] = -1
         return camera
     
-    detections = yolo_8(frame, verbose=False)
-    count = 0
-    
-    for d in detections:
-        class_list = [d.names[int(i)] for i in d.boxes.cls.tolist()]
-        
-        for c in class_list:
-            if c in ["car", "truck", "bus", "motorcycle"]:
-                count += 1
-                
+    result = yolo_8(frame, verbose=False, classes=[2, 3, 5, 7])
+    count = result[0].boxes.shape[0]
+    img = Image.fromarray(result[0].plot(pil=True))
+    bi = BytesIO()
+    img.save(bi, format="webp")
+    bi.seek(0)
+    camera["Url"] = (bytes("data:image/webp;base64,", "utf-8") + base64.b64encode(bi.getvalue())).decode("utf-8")
     camera["count"] = count
     return camera

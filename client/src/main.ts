@@ -1,7 +1,6 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 import './style.css';
-import Hls from 'hls.js';
 import mapboxgl from 'mapbox-gl';
 import { Camera, MapboxDirections } from './types';
 
@@ -40,6 +39,8 @@ directions.on('route', ({ route }: { route: MapboxDirections["routes"] }) => {
         .then(response => response.json())
         .then((data: Camera[]) => {
 
+            console.log(data)
+
             if (map.getLayer("cameras"))
                 map.removeLayer("cameras")
 
@@ -63,7 +64,7 @@ directions.on('route', ({ route }: { route: MapboxDirections["routes"] }) => {
                             },
                             properties: {
                                 Name: camera.Name,
-                                VideoUrl: camera.VideoUrl,
+                                Url: camera.Url,
                                 count: camera.count
                             }
                         }))
@@ -98,24 +99,17 @@ directions.on('route', ({ route }: { route: MapboxDirections["routes"] }) => {
                 if (!e.features?.[0]?.properties)
                     return
 
-                const { Name, VideoUrl } = e.features[0].properties as Camera
+                const { Name, Url } = e.features[0].properties as Camera
 
-                console.log(Name, VideoUrl)
+                // console.log(Name, Url)
 
                 new mapboxgl.Popup()
                     .setLngLat(e.lngLat)
                     .setHTML(`
                         <h3>${Name}</h3>
-                        <video id="mapbox-popup-video"></video>
+                        <img src="${Url}" />
                     `)
                     .addTo(map)
-
-                const video = document.getElementById("mapbox-popup-video") as HTMLVideoElement
-                if (Hls.isSupported()) {
-                    const hls = new Hls()
-                    hls.loadSource(VideoUrl)
-                    hls.attachMedia(video)
-                }
             })
         })
 })
